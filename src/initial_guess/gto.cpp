@@ -2,7 +2,7 @@
  * MRChem, a numerical real-space code for molecular electronic structure
  * calculations within the self-consistent field (SCF) approximations of quantum
  * chemistry (Hartree-Fock and Density Functional Theory).
- * Copyright (C) 2020 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
+ * Copyright (C) 2021 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
  *
  * This file is part of MRChem.
  *
@@ -157,7 +157,16 @@ void initial_guess::gto::project_mo(OrbitalVector &Phi,
         if (mpi::my_orb(Phi[i])) {
             GaussExp<3> mo_i = gto_exp.getMO(i, MO.transpose());
             Phi[i].alloc(NUMBER::Real);
+            auto periodic = (*MRA).getWorldBox().isPeriodic();
+            auto n_stds = (*MRA).getStds();
+            if (periodic) {
+                auto period = (*MRA).getWorldBox().getScalingFactor();
+                for (auto &p : period) p *= 2.0;
+                mo_i.makePeriodic(period, n_stds);
+            }
+            mrcpp::build_grid(Phi[i].real(), mo_i);
             mrcpp::project(prec, Phi[i].real(), mo_i);
+            Phi[i].real().normalize();
         }
         std::stringstream o_txt;
         o_txt << std::setw(w1 - 1) << i;

@@ -29,11 +29,18 @@ public:
                               std::shared_ptr<OrbitalVector> Phi = nullptr,
                               bool mpi_share = false);
     ~CoulombPotential() override = default;
+    virtual Density &getBSmear() { return b_smeared; }
+    virtual double getRc() { return this->rc; }
+    virtual bool isFarField() { return this->far_field; }
+    virtual void setFarField(bool ff) { this->far_field = ff; }
 
     friend class CoulombOperator;
 
 protected:
-    Density density; ///< Ground-state electron density
+    Density density;          ///< Ground-state electron density
+    Density b_smeared{false}; ///< Ground-state electron density
+    double rc{0.0};           ///< Ground-state electron density
+    bool far_field{false};    ///< Ground-state electron density
 
     std::shared_ptr<OrbitalVector> orbitals; ///< Unperturbed orbitals defining the ground-state electron density
     std::shared_ptr<mrcpp::PoissonOperator> poisson; ///< Operator used to compute the potential

@@ -2,7 +2,7 @@
  * MRChem, a numerical real-space code for molecular electronic structure
  * calculations within the self-consistent field (SCF) approximations of quantum
  * chemistry (Hartree-Fock and Density Functional Theory).
- * Copyright (C) 2020 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
+ * Copyright (C) 2021 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
  *
  * This file is part of MRChem.
  *
@@ -26,12 +26,16 @@
 #pragma once
 
 #include "chemistry_fwd.h"
+#include "qmfunctions/qmfunction_fwd.h"
 
 namespace mrchem {
 namespace chemistry {
 
 double compute_nuclear_repulsion(const Nuclei &nucs);
 double get_total_charge(const Nuclei &nucs);
-
+Density compute_nuclear_density(double prec, const Nuclei &nucs, double alpha);
+double compute_nuclear_self_repulsion(const Nuclei &nucs, double alpha);
+Density compute_nuclear_density_smeared(double prec, Nuclei nucs, double rc, double period);
+Density hack_density(double prec, Nuclei nucs, double rc, double period, OrbitalVector Phi);
 } // namespace chemistry
 } // namespace mrchem

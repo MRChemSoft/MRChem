@@ -33,6 +33,8 @@ public:
         r[2].name() = "r[z]";
     }
 
+    ComplexVector trace(Density rho);
+
 protected:
     std::shared_ptr<PositionPotential> r_x{nullptr};
     std::shared_ptr<PositionPotential> r_y{nullptr};

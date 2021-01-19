@@ -2,7 +2,7 @@
  * MRChem, a numerical real-space code for molecular electronic structure
  * calculations within the self-consistent field (SCF) approximations of quantum
  * chemistry (Hartree-Fock and Density Functional Theory).
- * Copyright (C) 2020 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
+ * Copyright (C) 2021 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
  *
  * This file is part of MRChem.
  *
@@ -172,9 +172,10 @@ void Orbital::loadOrbital(const std::string &file) {
     if (f.is_open()) f.read((char *)&orb_data, sizeof(OrbitalData));
     f.close();
 
+    std::array<double, 3> sfac{func_data.sfac[0], func_data.sfac[1], func_data.sfac[2]};
     std::array<int, 3> corner{func_data.corner[0], func_data.corner[1], func_data.corner[2]};
     std::array<int, 3> boxes{func_data.boxes[0], func_data.boxes[1], func_data.boxes[2]};
-    mrcpp::BoundingBox<3> world(func_data.scale, corner, boxes);
+    mrcpp::BoundingBox<3> world = mrcpp::BoundingBox<3>(func_data.scale, corner, boxes, sfac, func_data.periodic);
 
     mrcpp::MultiResolutionAnalysis<3> *mra = nullptr;
     if (func_data.type == mrcpp::Interpol) {

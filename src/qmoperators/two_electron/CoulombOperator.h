@@ -3,6 +3,7 @@
 #include "CoulombPotential.h"
 #include "CoulombPotentialD1.h"
 #include "CoulombPotentialD2.h"
+#include "HartreePotential.h"
 #include "qmoperators/RankZeroTensorOperator.h"
 
 /** @class CoulombOperator
@@ -47,10 +48,22 @@ public:
         J = potential;
         J.name() = "J";
     }
+
+    CoulombOperator(std::shared_ptr<mrcpp::PoissonOperator> P,
+                    std::shared_ptr<OrbitalVector> Phi,
+                    const Nuclei &nucs,
+                    const double &rc) {
+
+        potential = std::make_shared<HartreePotential>(P, Phi, nucs, rc);
+        RankZeroTensorOperator &J = (*this);
+        J = potential;
+    }
+
     ~CoulombOperator() override = default;
 
     auto &getPoisson() { return this->potential->getPoisson(); }
     auto &getDensity() { return this->potential->getDensity(); }
+    auto &getPotential() { return this->potential; }
 
 private:
     std::shared_ptr<CoulombPotential> potential{nullptr};

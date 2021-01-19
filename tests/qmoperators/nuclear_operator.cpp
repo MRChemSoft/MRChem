@@ -87,7 +87,7 @@ TEST_CASE("NuclearOperator", "[nuclear_operator]") {
 
     Nuclei nucs;
     nucs.push_back("H", {0.0, 0.0, 0.0});
-    NuclearOperator V(nucs, prec);
+    NuclearOperator V(nucs, prec, -1, false);
 
     V.setup(prec);
     SECTION("apply") {

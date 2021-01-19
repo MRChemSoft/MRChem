@@ -2,7 +2,7 @@
  * MRChem, a numerical real-space code for molecular electronic structure
  * calculations within the self-consistent field (SCF) approximations of quantum
  * chemistry (Hartree-Fock and Density Functional Theory).
- * Copyright (C) 2020 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
+ * Copyright (C) 2021 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
  *
  * This file is part of MRChem.
  *
@@ -90,7 +90,7 @@ bool initial_guess::sad::setup(OrbitalVector &Phi, double prec, const Nuclei &nu
     auto mrdft_p = xc_factory.build();
 
     KineticOperator T(D_p);
-    NuclearOperator V_nuc(nucs, prec);
+    NuclearOperator V_nuc(nucs, prec, -1.0, false);
     CoulombOperator J(P_p);
     XCOperator XC(mrdft_p);
     RankZeroTensorOperator V = V_nuc + J + XC;

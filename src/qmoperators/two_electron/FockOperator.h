@@ -18,6 +18,7 @@ class SCFEnergy;
 class KineticOperator;
 class NuclearOperator;
 class CoulombOperator;
+class FarFieldOperator;
 class ExchangeOperator;
 class XCOperator;
 class ElectricFieldOperator;
@@ -27,6 +28,7 @@ public:
     FockOperator(std::shared_ptr<KineticOperator> t = nullptr,
                  std::shared_ptr<NuclearOperator> v = nullptr,
                  std::shared_ptr<CoulombOperator> j = nullptr,
+                 std::shared_ptr<FarFieldOperator> f = nullptr,
                  std::shared_ptr<ExchangeOperator> k = nullptr,
                  std::shared_ptr<XCOperator> xc = nullptr,
                  std::shared_ptr<ElectricFieldOperator> ext = nullptr);
@@ -38,6 +40,7 @@ public:
     std::shared_ptr<KineticOperator> &getKineticOperator() { return this->kin; }
     std::shared_ptr<NuclearOperator> &getNuclearOperator() { return this->nuc; }
     std::shared_ptr<CoulombOperator> &getCoulombOperator() { return this->coul; }
+    std::shared_ptr<FarFieldOperator> &getFarFieldOperator() { return this->ff; }
     std::shared_ptr<ExchangeOperator> &getExchangeOperator() { return this->ex; }
     std::shared_ptr<XCOperator> &getXCOperator() { return this->xc; }
     std::shared_ptr<ElectricFieldOperator> &getExtOperator() { return this->ext; }
@@ -65,6 +68,7 @@ private:
     std::shared_ptr<KineticOperator> kin;
     std::shared_ptr<NuclearOperator> nuc;
     std::shared_ptr<CoulombOperator> coul;
+    std::shared_ptr<FarFieldOperator> ff;
     std::shared_ptr<ExchangeOperator> ex;
     std::shared_ptr<XCOperator> xc;
     std::shared_ptr<ElectricFieldOperator> ext; ///< Total external potential
