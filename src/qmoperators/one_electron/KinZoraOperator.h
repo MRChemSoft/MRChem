@@ -1,6 +1,7 @@
 #pragma once
 
 #include "MomentumOperator.h"
+#include "ZoraOperator.h"
 #include "qmoperators/one_electron/KinBaseOperator.h"
 
 /** @class KineticOperator
@@ -16,13 +17,19 @@
 
 namespace mrchem {
 
-class KineticOperator final : public KinBaseOperator {
+class KinZoraOperator final : public KinBaseOperator {
 public:
-    KineticOperator(std::shared_ptr<mrcpp::DerivativeOperator<3>> D)
-            : p(D) {
+    KinZoraOperator(std::shared_ptr<mrcpp::DerivativeOperator<3>> D,
+                    const Nuclei &nucs,
+                    double zora_factor,
+                    double proj_prec,
+                    double smooth_prec = -1.0,
+                    bool mpi_share = false)
+            : p(D)
+            , vz(nucs, zora_factor, proj_prec, smooth_prec, mpi_share, 0) {
         // Invoke operator= to assign *this operator
         RankZeroTensorOperator &t = (*this);
-        t = 0.5 * (p[0] * p[0] + p[1] * p[1] + p[2] * p[2]);
+        t = 0.5 * (p[0] * vz * p[0] + p[1] * vz * p[1] + p[2] * vz * p[2]);
         t.name() = "T";
     }
 
@@ -34,6 +41,7 @@ public:
 
 private:
     MomentumOperator p;
+    ZoraOperator vz;
 };
 
 } // namespace mrchem

@@ -23,6 +23,7 @@
  * <https://mrchem.readthedocs.io/>
  */
 
+#include <MRCPP/MWOperators>
 #include <MRCPP/Printer>
 #include <MRCPP/Timer>
 
@@ -34,8 +35,17 @@
 #include "qmfunctions/Orbital.h"
 #include "qmfunctions/orbital_utils.h"
 #include "qmfunctions/qmfunction_utils.h"
+#include "qmoperators/RankOneTensorOperator.h"
+#include "qmoperators/RankZeroTensorOperator.h"
+#include "qmoperators/one_electron/GradLnKappaOperator.h"
+#include "qmoperators/one_electron/IdentityOperator.h"
+#include "qmoperators/one_electron/KinZoraOperator.h"
+#include "qmoperators/one_electron/KineticOperator.h"
+#include "qmoperators/one_electron/ZoraPotential.h"
 #include "qmoperators/two_electron/FockOperator.h"
 #include "qmoperators/two_electron/ReactionOperator.h"
+
+#include "qmoperators/one_electron/NablaOperator.h"
 
 using mrcpp::Printer;
 using mrcpp::Timer;
@@ -230,6 +240,13 @@ json GroundStateSolver::optimize(Molecule &mol, FockOperator &F) {
     double err_o = errors.maxCoeff();
     double err_t = errors.norm();
 
+    //    auto D = std::make_shared<mrcpp::ABGVOperator<3>>(*MRA, 0.5, 0.5);
+    //    NablaOperator nab(D);
+    //    auto grad_lnk = F.getGradZoraOperator();
+    //    auto zora = F.getZoraOperator();
+    //    RankZeroTensorOperator grad_lnK_grad = (*grad_lnk)[0] * nab[0] + (*grad_lnk)[1] * nab[1] + (*grad_lnk)[2] *
+    //    nab[2];
+
     this->error.push_back(err_t);
     this->energy.push_back(E_n);
     this->property.push_back(E_n.getTotalEnergy());
@@ -260,7 +277,6 @@ json GroundStateSolver::optimize(Molecule &mol, FockOperator &F) {
         }
         // Init Helmholtz operator
         HelmholtzVector H(helm_prec, F_mat.real().diagonal());
-
         // Setup argument
         Timer t_arg;
         mrcpp::print::header(2, "Computing Helmholtz argument");
@@ -271,8 +287,10 @@ json GroundStateSolver::optimize(Molecule &mol, FockOperator &F) {
         if (plevel == 1) mrcpp::print::time(1, "Computing Helmholtz argument", t_arg);
 
         // Apply Helmholtz operator
+        //        OrbitalVector Phi_np1 = H.apply_zora(F.potential(), grad_lnK_grad, *zora, Phi_n, Psi);
         OrbitalVector Phi_np1 = H.apply(F.potential(), Phi_n, Psi);
         Psi.clear();
+
         F.clear();
         orbital::orthonormalize(orb_prec, Phi_np1, F_mat);
 

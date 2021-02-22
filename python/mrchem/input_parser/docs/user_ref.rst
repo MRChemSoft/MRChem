@@ -305,6 +305,21 @@ User input reference
   
     **Default** ``True``
   
+   :zora: Activate scalar relativistic SCF with the ZORA Hamiltonian. 
+  
+    **Type** ``bool``
+  
+    **Default** ``False``
+  
+ :ZORA: Define required parameters for the ZORA Hamiltonian 
+
+  :red:`Keywords`
+   :light_speed: Adjust speed of light. 
+  
+    **Type** ``float``
+  
+    **Default** ``-1.0``
+  
  :DFT: Define the exchange-correlation functional in case of DFT. 
 
   :red:`Keywords`

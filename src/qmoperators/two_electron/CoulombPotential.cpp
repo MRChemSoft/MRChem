@@ -78,7 +78,7 @@ void CoulombPotential::clear() {
  *
  * @param prec: apply precision
  *
- * This will compute the Coulomb potential by application o the Poisson operator
+ * This will compute the Coulomb potential by application of the Poisson operator
  * to the precomputed electron density.
  */
 void CoulombPotential::setupGlobalPotential(double prec) {
@@ -106,7 +106,7 @@ void CoulombPotential::setupGlobalPotential(double prec) {
  *
  * @param prec: apply precision
  *
- * This will compute the Coulomb potential by application o the Poisson operator
+ * This will compute the Coulomb potential by application of the Poisson operator
  * to the precomputed electron density.
  */
 QMFunction CoulombPotential::setupLocalPotential(double prec) {

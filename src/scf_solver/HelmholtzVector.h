@@ -37,6 +37,8 @@
  * The operators are produced on the fly based on a vector of lambda parameters.
  */
 
+class QMPotential;
+
 namespace mrchem {
 
 class HelmholtzVector final {
@@ -46,6 +48,11 @@ public:
     DoubleMatrix getLambdaMatrix() const { return this->lambda.asDiagonal(); }
 
     OrbitalVector apply(RankZeroTensorOperator &V, OrbitalVector &Phi, OrbitalVector &Psi) const;
+    OrbitalVector apply_zora(RankZeroTensorOperator &V,
+                             RankZeroTensorOperator &GlnkG,
+                             RankZeroTensorOperator &zora,
+                             OrbitalVector &Phi,
+                             OrbitalVector &Psi) const;
     OrbitalVector operator()(OrbitalVector &Phi) const;
 
 private:
