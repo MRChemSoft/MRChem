@@ -27,13 +27,18 @@
 #include "MRCPP/Printer"
 #include "MRCPP/Timer"
 
-#include "parallel.h"
-
 #include "HelmholtzVector.h"
+
+#include "parallel.h"
 #include "qmfunctions/Orbital.h"
 #include "qmfunctions/orbital_utils.h"
-#include "qmfunctions/qmfunction_utils.h"
+#include "qmoperators/one_electron/IdentityOperator.h"
+#include "qmoperators/one_electron/KineticOperator.h"
+#include "qmoperators/one_electron/NablaOperator.h"
+#include "qmoperators/one_electron/ZoraOperator.h"
+#include "tensor/RankOneOperator.h"
 #include "tensor/RankZeroOperator.h"
+#include "tensor/tensor_utils.h"
 #include "utils/print_utils.h"
 
 using mrcpp::Printer;
@@ -123,6 +128,90 @@ OrbitalVector HelmholtzVector::apply(RankZeroOperator &V, OrbitalVector &Phi, Or
         Vphi_i.add(1.0, Psi[i]);
         Vphi_i.rescale(-1.0 / (2.0 * MATHCONST::pi));
         out[i] = apply(i, Vphi_i);
+
+        std::stringstream o_txt;
+        o_txt << std::setw(4) << i;
+        o_txt << std::setw(19) << std::setprecision(pprec) << std::scientific << out[i].norm();
+        print_utils::qmfunction(2, o_txt.str(), out[i], t_lap);
+    }
+    mrcpp::print::footer(2, t_tot, 2);
+    if (plevel == 1) mrcpp::print::time(1, "Applying Helmholtz operators", t_tot);
+    return out;
+}
+
+OrbitalVector HelmholtzVector::apply_zora_v3(RankZeroOperator &V, RankZeroOperator &kappa, OrbitalVector &Phi, OrbitalVector &Psi) const {
+
+    // Construct necessary operators
+    auto diff = std::make_shared<mrcpp::ABGVOperator<3>>(*MRA, 0.0, 0.0);
+    NablaOperator nabla(diff);
+    KineticOperator T(diff);
+    IdentityOperator I;
+    RankOneOperator<3> dKappa = nabla(kappa);
+
+    // Build the terms in eq. 56
+    RankZeroOperator O;
+    O += (I - kappa) * T;
+    O += -0.5 * tensor::dot(dKappa, nabla);
+    O.setup(this->prec);
+
+    // Apply O on all orbitals
+    OrbitalVector out = orbital::param_copy(Phi);
+    for (int i = 0; i < Phi.size(); i++) {
+        if (not mpi::my_orb(out[i])) continue;
+        Orbital OPhi_i = (O + V)(Phi[i]);
+        OPhi_i.add(-1.0, Psi[i]);
+        OPhi_i.rescale(-1.0 / (2.0 * MATHCONST::pi));
+        out[i] = apply(i, OPhi_i);
+    }
+
+    O.clear();
+    return out;
+}
+
+/** @brief Apply Helmholtz operator component wise on OrbitalVector
+ *
+ * This will construct a separate Helmholtz operator for each of the entries
+ * in the OrbitalVector based on the corresponding lambda_i parameter in the
+ * HelmholtzVector. Computes output as: out_i = H_i[V*phi_i + psi_i]
+ *
+ * Specialized version with smaller memory footprint since the full vector V*Phi
+ * is never stored, but computed on the fly.
+ *
+ * NOTE: Helmholtz operator will be applied with _absolute_ precision
+ *
+ *
+ * MPI: Output vector gets the same MPI distribution as input vector. Only
+ *      local orbitals are computed.
+ */
+OrbitalVector HelmholtzVector::apply_zora(RankZeroOperator &V, RankZeroOperator &GlnkG, RankZeroOperator &zora, OrbitalVector &Phi, OrbitalVector &Psi) const {
+    Timer t_tot, t_lap;
+    auto pprec = Printer::getPrecision();
+    auto plevel = Printer::getPrintLevel();
+    mrcpp::print::header(2, "Applying Helmholtz operators");
+    if (Phi.size() != Psi.size()) MSG_ABORT("OrbitalVector size mismatch");
+
+    double rel_factor = 2.0 * PHYSCONST::alpha_inv * PHYSCONST::alpha_inv;
+    IdentityOperator I;
+
+    OrbitalVector out = orbital::param_copy(Phi);
+    for (int i = 0; i < Phi.size(); i++) {
+        double eps_i = this->lambda[i];
+        if (not mpi::my_orb(out[i])) continue;
+
+        t_lap.start();
+
+        // CHECK ALL THE SIGNS AND ALL FACTORS PI AND TWO!!!!!!!!!
+
+        Orbital GlnkGphi_i = GlnkG(Phi[i]);
+
+        RankZeroOperator zoraV = (zora + (eps_i / rel_factor) * I) * V;
+
+        Orbital zoraVphi_i = zoraV(Phi[i]);
+
+        zoraVphi_i.add(1.0, zora(Psi[i]));
+        zoraVphi_i.add(-0.5, GlnkGphi_i);
+        zoraVphi_i.rescale(-1.0 / (2.0 * MATHCONST::pi));
+        out[i] = apply(i, zoraVphi_i);
 
         std::stringstream o_txt;
         o_txt << std::setw(4) << i;

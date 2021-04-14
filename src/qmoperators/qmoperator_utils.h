@@ -29,35 +29,14 @@
 #include "qmfunctions/qmfunction_fwd.h"
 #include "tensor/tensor_fwd.h"
 
-/** @class HelmholtzVector
- *
- * @brief Container of HelmholtzOperators for a corresponding OrbtialVector
- *
- * This class assigns one HelmholtzOperator to each orbital in an OrbitalVector.
- * The operators are produced on the fly based on a vector of lambda parameters.
- */
-
 namespace mrchem {
+class MomentumOperator;
 
-class HelmholtzVector final {
-public:
-    HelmholtzVector(double pr, const DoubleVector &l);
-
-    DoubleMatrix getLambdaMatrix() const { return this->lambda.asDiagonal(); }
-
-    OrbitalVector apply(RankZeroOperator &V, OrbitalVector &Phi, OrbitalVector &Psi) const;
-
-    OrbitalVector apply_zora(RankZeroOperator &V, RankZeroOperator &GlnkG, RankZeroOperator &zora, OrbitalVector &Phi, OrbitalVector &Psi) const;
-
-    OrbitalVector apply_zora_v3(RankZeroOperator &V, RankZeroOperator &kappa, OrbitalVector &Phi, OrbitalVector &Psi) const;
-
-    OrbitalVector operator()(OrbitalVector &Phi) const;
-
-private:
-    double prec;         ///< Precision for construction and application of Helmholtz operators
-    DoubleVector lambda; ///< Helmholtz parameter, mu_i = sqrt(-2.0*lambda_i)
-
-    Orbital apply(int i, Orbital &phi) const;
-};
+namespace qmoperator {
+double calc_kinetic_trace(MomentumOperator &p, OrbitalVector &Phi);
+ComplexDouble calc_kinetic_trace(MomentumOperator &p, RankZeroOperator &V, OrbitalVector &Phi);
+ComplexMatrix calc_kinetic_matrix(MomentumOperator &p, OrbitalVector &bra, OrbitalVector &ket);
+ComplexMatrix calc_kinetic_matrix(MomentumOperator &p, RankZeroOperator &V, OrbitalVector &bra, OrbitalVector &ket);
+} // namespace qmoperator
 
 } // namespace mrchem

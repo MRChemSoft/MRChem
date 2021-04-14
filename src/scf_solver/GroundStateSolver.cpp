@@ -34,7 +34,7 @@
 #include "qmfunctions/Orbital.h"
 #include "qmfunctions/orbital_utils.h"
 #include "qmfunctions/qmfunction_utils.h"
-#include "qmoperators/one_electron/KineticOperator.h"
+#include "qmoperators/one_electron/ZoraOperator.h"
 #include "qmoperators/two_electron/FockOperator.h"
 #include "qmoperators/two_electron/ReactionOperator.h"
 
@@ -261,7 +261,6 @@ json GroundStateSolver::optimize(Molecule &mol, FockOperator &F) {
         }
         // Init Helmholtz operator
         HelmholtzVector H(helm_prec, F_mat.real().diagonal());
-
         // Setup argument
         Timer t_arg;
         mrcpp::print::header(2, "Computing Helmholtz argument");
@@ -272,8 +271,15 @@ json GroundStateSolver::optimize(Molecule &mol, FockOperator &F) {
         if (plevel == 1) mrcpp::print::time(1, "Computing Helmholtz argument", t_arg);
 
         // Apply Helmholtz operator
-        OrbitalVector Phi_np1 = H.apply(F.potential(), Phi_n, Psi);
+        // Not logical to check if zora in every iteration...
+        OrbitalVector Phi_np1;
+        if (F.isZora()) {
+            Phi_np1 = H.apply_zora_v3(F.potential(), F.zora(), Phi_n, Psi);
+        } else {
+            Phi_np1 = H.apply(F.potential(), Phi_n, Psi);
+        }
         Psi.clear();
+
         F.clear();
         orbital::orthonormalize(orb_prec, Phi_np1, F_mat);
 

@@ -38,56 +38,29 @@
 #include "qmoperators/one_electron/ElectricFieldOperator.h"
 #include "qmoperators/one_electron/KineticOperator.h"
 #include "qmoperators/one_electron/NuclearOperator.h"
+#include "qmoperators/one_electron/ZoraKineticOperator.h"
+#include "qmoperators/qmoperator_utils.h"
 #include "utils/math_utils.h"
 
 using mrcpp::Printer;
 using mrcpp::Timer;
 
-using KineticOperator_p = std::shared_ptr<mrchem::KineticOperator>;
-using NuclearOperator_p = std::shared_ptr<mrchem::NuclearOperator>;
-using CoulombOperator_p = std::shared_ptr<mrchem::CoulombOperator>;
-using ExchangeOperator_p = std::shared_ptr<mrchem::ExchangeOperator>;
-using XCOperator_p = std::shared_ptr<mrchem::XCOperator>;
-using ElectricFieldOperator_p = std::shared_ptr<mrchem::ElectricFieldOperator>;
-using ReactionOperator_p = std::shared_ptr<mrchem::ReactionOperator>;
-
 namespace mrchem {
-extern mrcpp::MultiResolutionAnalysis<3> *MRA; // Global MRA
-
-/** @brief constructor
- *
- * @param t:   Kinetic operator
- * @param v:   Nuclear potential operator
- * @param j:   Coulomb operator
- * @param k:   HF exchange operator
- * @param xc:  Exchange-Correlation operator
- * @param ext: External Field operator
- *
- * Each of the arguments can be NULL, so this operators includes both core Hamiltonian,
- * the Hartree(-Fock) method and (pure/hybrid) Density Functional Theory.
- */
-FockOperator::FockOperator(KineticOperator_p t,
-                           NuclearOperator_p v,
-                           CoulombOperator_p j,
-                           ExchangeOperator_p k,
-                           XCOperator_p xc,
-                           ElectricFieldOperator_p ext,
-                           ReactionOperator_p reo)
-        : kin(t)
-        , nuc(v)
-        , coul(j)
-        , ex(k)
-        , xc(xc)
-        , ext(ext)
-        , Ro(reo) {}
 
 /** @brief build the Fock operator once all contributions are in place
  *
  */
 void FockOperator::build(double exx) {
     this->exact_exchange = exx;
+
     this->T = RankZeroOperator();
-    if (this->kin != nullptr) this->T += (*this->kin);
+    if (this->mom != nullptr) {
+        if (isZora()) {
+            this->T += ZoraKineticOperator(momentum(), zora());
+        } else {
+            this->T += KineticOperator(momentum());
+        }
+    }
 
     this->V = RankZeroOperator();
     if (this->nuc != nullptr) this->V += (*this->nuc);
@@ -181,8 +154,15 @@ SCFEnergy FockOperator::trace(OrbitalVector &Phi, const Nuclei &nucs) {
         Er_tot = 0.5 * this->Ro->getTotalEnergy();
         Er_el = 0.5 * this->Ro->getElectronicEnergy();
     }
+
+    // Kinetic part
+    if (isZora()) {
+        E_kin = qmoperator::calc_kinetic_trace(momentum(), zora(), Phi).real();
+    } else {
+        E_kin = qmoperator::calc_kinetic_trace(momentum(), Phi);
+    }
+
     // Electronic part
-    if (this->kin != nullptr) E_kin = this->kin->trace(Phi).real();
     if (this->nuc != nullptr) E_en = this->nuc->trace(Phi).real();
     if (this->coul != nullptr) E_ee = 0.5 * this->coul->trace(Phi).real();
     if (this->ex != nullptr) E_x = -this->exact_exchange * this->ex->trace(Phi).real();
@@ -199,18 +179,19 @@ ComplexMatrix FockOperator::operator()(OrbitalVector &bra, OrbitalVector &ket) {
     auto plevel = Printer::getPrintLevel();
     mrcpp::print::header(2, "Computing Fock matrix");
 
-    auto t = this->getKineticOperator();
-    auto v = this->potential();
+    ComplexMatrix T_mat = ComplexMatrix::Zero(bra.size(), ket.size());
+    if (isZora()) {
+        T_mat = qmoperator::calc_kinetic_matrix(momentum(), zora(), bra, ket);
+    } else {
+        T_mat = qmoperator::calc_kinetic_matrix(momentum(), bra, ket);
+    }
 
-    ComplexMatrix T = ComplexMatrix::Zero(bra.size(), ket.size());
-    if (t != nullptr) T += qmoperator::calc_kinetic_matrix(*t, bra, ket);
-
-    ComplexMatrix V = ComplexMatrix::Zero(bra.size(), ket.size());
-    if (v.size() > 0) V += v(bra, ket);
+    ComplexMatrix V_mat = ComplexMatrix::Zero(bra.size(), ket.size());
+    V_mat += potential()(bra, ket);
 
     mrcpp::print::footer(2, t_tot, 2);
     if (plevel == 1) mrcpp::print::time(1, "Computing Fock matrix", t_tot);
-    return T + V;
+    return T_mat + V_mat;
 }
 
 ComplexMatrix FockOperator::dagger(OrbitalVector &bra, OrbitalVector &ket) {

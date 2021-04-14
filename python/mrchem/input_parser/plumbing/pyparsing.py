@@ -95,8 +95,8 @@ classes inherit from. Use the docstrings for examples of how to:
    namespace class
 """
 
-__version__ = "2.4.7"
-__versionTime__ = "30 Mar 2020 00:43 UTC"
+__version__ = "2.4.6"
+__versionTime__ = "24 Dec 2019 04:27 UTC"
 __author__ = "Paul McGuire <ptmcg@users.sourceforge.net>"
 
 import string
@@ -1391,12 +1391,6 @@ class ParserElement(object):
         """
         ParserElement._literalStringClass = cls
 
-    @classmethod
-    def _trim_traceback(cls, tb):
-        while tb.tb_next:
-            tb = tb.tb_next
-        return tb
-
     def __init__(self, savelist=False):
         self.parseAction = list()
         self.failAction = None
@@ -1949,9 +1943,7 @@ class ParserElement(object):
             if ParserElement.verbose_stacktrace:
                 raise
             else:
-                # catch and re-raise exception from here, clearing out pyparsing internal stack trace
-                if getattr(exc, '__traceback__', None) is not None:
-                    exc.__traceback__ = self._trim_traceback(exc.__traceback__)
+                # catch and re-raise exception from here, clears out pyparsing internal stack trace
                 raise exc
         else:
             return tokens
@@ -2025,9 +2017,7 @@ class ParserElement(object):
             if ParserElement.verbose_stacktrace:
                 raise
             else:
-                # catch and re-raise exception from here, clearing out pyparsing internal stack trace
-                if getattr(exc, '__traceback__', None) is not None:
-                    exc.__traceback__ = self._trim_traceback(exc.__traceback__)
+                # catch and re-raise exception from here, clears out pyparsing internal stack trace
                 raise exc
 
     def transformString(self, instring):
@@ -2073,9 +2063,7 @@ class ParserElement(object):
             if ParserElement.verbose_stacktrace:
                 raise
             else:
-                # catch and re-raise exception from here, clearing out pyparsing internal stack trace
-                if getattr(exc, '__traceback__', None) is not None:
-                    exc.__traceback__ = self._trim_traceback(exc.__traceback__)
+                # catch and re-raise exception from here, clears out pyparsing internal stack trace
                 raise exc
 
     def searchString(self, instring, maxMatches=_MAX_INT):
@@ -2105,9 +2093,7 @@ class ParserElement(object):
             if ParserElement.verbose_stacktrace:
                 raise
             else:
-                # catch and re-raise exception from here, clearing out pyparsing internal stack trace
-                if getattr(exc, '__traceback__', None) is not None:
-                    exc.__traceback__ = self._trim_traceback(exc.__traceback__)
+                # catch and re-raise exception from here, clears out pyparsing internal stack trace
                 raise exc
 
     def split(self, instring, maxsplit=_MAX_INT, includeSeparators=False):
@@ -2579,9 +2565,7 @@ class ParserElement(object):
             if ParserElement.verbose_stacktrace:
                 raise
             else:
-                # catch and re-raise exception from here, clearing out pyparsing internal stack trace
-                if getattr(exc, '__traceback__', None) is not None:
-                    exc.__traceback__ = self._trim_traceback(exc.__traceback__)
+                # catch and re-raise exception from here, clears out pyparsing internal stack trace
                 raise exc
 
     def __eq__(self, other):
@@ -2740,7 +2724,7 @@ class ParserElement(object):
                 continue
             if not t:
                 continue
-            out = ['\n' + '\n'.join(comments) if comments else '', t]
+            out = ['\n'.join(comments), t]
             comments = []
             try:
                 # convert newline marks to actual newlines, and strip leading BOM if present
@@ -3328,7 +3312,7 @@ class Regex(Token):
         self.name = _ustr(self)
         self.errmsg = "Expected " + self.name
         self.mayIndexError = False
-        self.mayReturnEmpty = self.re_match("") is not None
+        self.mayReturnEmpty = True
         self.asGroupList = asGroupList
         self.asMatch = asMatch
         if self.asGroupList:
@@ -4009,7 +3993,6 @@ class And(ParseExpression):
             self.leaveWhitespace()
 
     def __init__(self, exprs, savelist=True):
-        exprs = list(exprs)
         if exprs and Ellipsis in exprs:
             tmp = []
             for i, expr in enumerate(exprs):
@@ -4375,7 +4358,7 @@ class Each(ParseExpression):
         if self.initExprGroups:
             self.opt1map = dict((id(e.expr), e) for e in self.exprs if isinstance(e, Optional))
             opt1 = [e.expr for e in self.exprs if isinstance(e, Optional)]
-            opt2 = [e for e in self.exprs if e.mayReturnEmpty and not isinstance(e, (Optional, Regex))]
+            opt2 = [e for e in self.exprs if e.mayReturnEmpty and not isinstance(e, Optional)]
             self.optionals = opt1 + opt2
             self.multioptionals = [e.expr for e in self.exprs if isinstance(e, ZeroOrMore)]
             self.multirequired = [e.expr for e in self.exprs if isinstance(e, OneOrMore)]
@@ -5452,8 +5435,8 @@ def matchPreviousExpr(expr):
     return rep
 
 def _escapeRegexRangeChars(s):
-    # ~  escape these chars: ^-[]
-    for c in r"\^-[]":
+    # ~  escape these chars: ^-]
+    for c in r"\^-]":
         s = s.replace(c, _bslash + c)
     s = s.replace("\n", r"\n")
     s = s.replace("\t", r"\t")
@@ -6567,10 +6550,10 @@ class pyparsing_common:
     """mixed integer of the form 'integer - fraction', with optional leading integer, returns float"""
     mixed_integer.addParseAction(sum)
 
-    real = Regex(r'[+-]?(?:\d+\.\d*|\.\d+)').setName("real number").setParseAction(convertToFloat)
+    real = Regex(r'[+-]?(:?\d+\.\d*|\.\d+)').setName("real number").setParseAction(convertToFloat)
     """expression that parses a floating point number and returns a float"""
 
-    sci_real = Regex(r'[+-]?(?:\d+(?:[eE][+-]?\d+)|(?:\d+\.\d*|\.\d+)(?:[eE][+-]?\d+)?)').setName("real number with scientific notation").setParseAction(convertToFloat)
+    sci_real = Regex(r'[+-]?(:?\d+(:?[eE][+-]?\d+)|(:?\d+\.\d*|\.\d+)(:?[eE][+-]?\d+)?)').setName("real number with scientific notation").setParseAction(convertToFloat)
     """expression that parses a floating point number with optional
     scientific notation and returns a float"""
 

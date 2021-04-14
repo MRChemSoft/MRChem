@@ -27,31 +27,25 @@
 
 #include "tensor/RankZeroOperator.h"
 
-#include "MomentumOperator.h"
-
-/** @class KineticOperator
- *
- * @brief Operator for kinetic energy
- *
- * This operator is constructed as the square of the more fundamental
- * MomentumOperator. The general base class functions for calculation of
- * expectation values are overwritten, as they can be improved due to
- * symmetry.
- *
- */
+#include "qmfunctions/qmfunction_utils.h"
+#include "qmoperators/QMPotential.h"
 
 namespace mrchem {
 
-class KineticOperator final : public RankZeroOperator {
+class ZoraOperator final : public RankZeroOperator {
 public:
-    explicit KineticOperator(std::shared_ptr<mrcpp::DerivativeOperator<3>> D)
-            : KineticOperator(MomentumOperator(D)) {}
+    ZoraOperator(QMPotential &V, double zfac, bool mpi_share = false) {
+        auto V_zora = std::make_shared<QMPotential>(1, mpi_share);
+        qmfunction::deep_copy(*V_zora, V);
 
-    explicit KineticOperator(MomentumOperator p) {
+        // Re-map the ZORA function on the same grid as the input potential
+        auto zmap = [zfac](double val) -> double { return zfac / (zfac - val); };
+        V_zora->real().map(zmap);
+
         // Invoke operator= to assign *this operator
-        RankZeroOperator &t = (*this);
-        t = 0.5 * (p[0] * p[0] + p[1] * p[1] + p[2] * p[2]);
-        t.name() = "T";
+        RankZeroOperator &O = (*this);
+        O = V_zora;
+        O.name() = "V_zora";
     }
 };
 
