@@ -24,17 +24,17 @@
  */
 
 #pragma once
-
 #include <MRCPP/MWFunctions>
+#include <string>
 
 namespace mrchem {
 
 class CUBEfile final : public mrcpp::RepresentableFunction<3> {
 public:
-    CUBEfile();
+    CUBEfile(std::string file_path);
     double evalf(const mrcpp::Coord<3> &r) const override;
 
 protected:
-    void readFile();
+    void readFile(std::string file_path);
 };
 } // namespace mrchem

@@ -27,10 +27,13 @@
 
 #include <MRCPP/Printer>
 #include <MRCPP/Timer>
+#include <string>
 
 #include "mrchem.h"
 #include "mrenv.h"
 #include "parallel.h"
+
+#include "chemistry/CUBEfile.h"
 
 // Initializing global variables
 mrcpp::MultiResolutionAnalysis<3> *mrchem::MRA;
@@ -48,6 +51,10 @@ int main(int argc, char **argv) {
 
     // Do your stuff here
     println(0, json_inp.dump(2));
+
+    std::string file_path = "test.txt";
+
+    CUBEfile testCube(file_path);
 
     timer.stop();
     double wt = timer.elapsed();

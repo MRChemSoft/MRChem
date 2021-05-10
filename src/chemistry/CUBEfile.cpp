@@ -22,16 +22,41 @@
  * For information on the complete list of contributors to MRChem, see:
  * <https://mrchem.readthedocs.io/>
  */
-#include "Cavity.h"
-#include "utils/math_utils.h"
+
+#include "CUBEfile.h"
+#include <fstream>
+#include <iostream>
+#include <sstream>
+#include <string>
 
 namespace mrchem {
 
-CUBEfile::CUBEfile() {}
+CUBEfile::CUBEfile(std::string file_path) {
 
-void CUBEfile::readFile() {}
+    readFile(file_path);
+}
 
 // Do a quadrature of the file
 double CUBEfile::evalf(const mrcpp::Coord<3> &r) const {}
+
+void CUBEfile::readFile(std::string file_path) {
+    std::ifstream raw_cube_file;
+    raw_cube_file.open(file_path, std::ios::in);
+    std::string raw_cube_string;
+    std::stringstream raw_str_stream;
+    if (!raw_cube_file) {
+        throw "No such file";
+    } else {
+
+        while (std::getline(raw_cube_file, raw_cube_string)) {
+            raw_str_stream << raw_cube_string + "\n";
+            std::cout << raw_cube_string;
+        }
+    }
+    raw_cube_file.close();
+    raw_cube_string.empty();
+    raw_cube_string = raw_str_stream.str();
+    std::cout << raw_cube_string;
+}
 
 } // namespace mrchem
