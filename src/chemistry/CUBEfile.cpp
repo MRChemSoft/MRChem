@@ -27,13 +27,11 @@
 
 namespace mrchem {
 
-CUBEfile::CUBEfile() { }
+CUBEfile::CUBEfile() {}
 
-void CUBEfile::readFile() { }
+void CUBEfile::readFile() {}
 
 // Do a quadrature of the file
-double CUBEfile::evalf(const mrcpp::Coord<3> &r) const {
-}
-
+double CUBEfile::evalf(const mrcpp::Coord<3> &r) const {}
 
 } // namespace mrchem
