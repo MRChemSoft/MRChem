@@ -59,7 +59,7 @@ int main(int argc, char **argv) {
 
     Timer timer;
     // testing stuff
-    std::string file_path = "test.txt";
+    std::string file_path = "HOMO.cube";
 
     CUBEfile testCube(file_path);
     // finished test

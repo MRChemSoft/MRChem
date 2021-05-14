@@ -40,23 +40,42 @@ CUBEfile::CUBEfile(std::string file_path) {
 double CUBEfile::evalf(const mrcpp::Coord<3> &r) const {}
 
 void CUBEfile::readFile(std::string file_path) {
+    double N_atoms;
+    std::vector<double> corner;
     std::ifstream raw_cube_file;
-    raw_cube_file.open(file_path, std::ios::in);
-    std::string raw_cube_string;
-    std::stringstream raw_str_stream;
-    if (!raw_cube_file) {
-        throw "No such file";
-    } else {
+    std::stringstream comments;
+    bool DsetIDs_exists = false;
+    double vals_per_grid_pt;
+    double vol_coords[80][80][80];
 
-        while (std::getline(raw_cube_file, raw_cube_string)) {
-            raw_str_stream << raw_cube_string + "\n";
-            std::cout << raw_cube_string;
+    raw_cube_file.open(file_path, std::ios::in);
+
+    if (!raw_cube_file) {
+        std::cout << "No such file!!!! >:(";
+    } else {
+        std::string line;
+        int i = 0;
+        while (std::getline(raw_cube_file, line, '\n')) {
+            if (i <= 1) comments << line << '\n';
+            if (i == 2) {
+                std::vector<double> origindata;
+                std::stringstream origin(line);
+                double value;
+                while (origin >> value) { origindata.push_back(value); }
+                if (origindata[0] < 0) DsetIDs_exists = true;
+                N_atoms = std::fabs(origindata[0]);
+                vals_per_grid_pt = origindata[4];
+                corner = std::vector<double>(origindata.begin() + 1, origindata.end() - 1);
+            }
+            if ((3 <= i) and (i <= 5)) axes << line << "\n";
+            if ((6 <= i) and (i <= (5 + N_atoms))) atoms << line << "\n";
+            if ((i == (6 + N_atoms)) and (DSET_IDS_exists)) DSESET_IDS << line;
+            if (i >= (7 + N_atoms)) i++;
         }
     }
     raw_cube_file.close();
-    raw_cube_string.empty();
-    raw_cube_string = raw_str_stream.str();
-    std::cout << raw_cube_string;
+    std::cout << comments.str();
+    std::cout << corner[0] << " " << corner[1] << " " << corner[2] << "\n";
 }
 
 } // namespace mrchem
