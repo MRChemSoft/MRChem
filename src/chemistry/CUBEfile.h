@@ -36,5 +36,6 @@ public:
 
 protected:
     void readFile(std::string file_path);
+    std::vector<std::vector<std::vector<double>>> CUBE;
 };
 } // namespace mrchem
