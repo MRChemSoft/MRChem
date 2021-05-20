@@ -40,6 +40,8 @@ CUBEfile::CUBEfile(std::string file_path) {
 double CUBEfile::evalf(const mrcpp::Coord<3> &r) const {}
 
 // first draft on reading a cubefile
+// for the second try I might want to go for a single while loop to extract everything into the respective variables with an index i and if else blocks
+// if that does nothing on the performance then i can instead try to reuse some variables.
 void CUBEfile::readFile(std::string file_path) {
     // open cubefile and read its contents into a vector
 
@@ -97,9 +99,6 @@ void CUBEfile::readFile(std::string file_path) {
             i++;
         }
     }
-    std::cout << N_steps[0] << "  " << voxel_axes[0][0] << "  " << voxel_axes[0][1] << "  " << voxel_axes[0][2] << "\n";
-    std::cout << N_steps[1] << "  " << voxel_axes[1][0] << "  " << voxel_axes[1][1] << "  " << voxel_axes[1][2] << "\n";
-    std::cout << N_steps[2] << "  " << voxel_axes[2][0] << "  " << voxel_axes[2][1] << "  " << voxel_axes[2][2] << "\n";
 
     // get all atom coordinates
     int atom_numbers[std::abs(N_atoms)];
@@ -119,9 +118,6 @@ void CUBEfile::readFile(std::string file_path) {
             i++;
         }
     }
-    std::cout << atom_numbers[0] << "  " << atom_charges[0] << "  " << atom_coords[0][0] << "  " << atom_coords[0][1] << "  " << atom_coords[0][2] << "\n";
-    std::cout << atom_numbers[1] << "  " << atom_charges[1] << "  " << atom_coords[1][0] << "  " << atom_coords[1][1] << "  " << atom_coords[1][2] << "\n";
-    std::cout << atom_numbers[2] << "  " << atom_charges[2] << "  " << atom_coords[2][0] << "  " << atom_coords[2][1] << "  " << atom_coords[2][2] << "\n";
 
     // get the DSET_IDS if there are any
     std::vector<int> DSET_IDS; // vector containing important information about data stored in each voxel point.
@@ -132,8 +128,6 @@ void CUBEfile::readFile(std::string file_path) {
     } else {
         DSET_IDS.push_back(1);
     }
-    for (auto iter = DSET_IDS.begin(); iter != DSET_IDS.end(); iter++) { std::cout << *iter << "    "; }
-    std::cout << "\n";
 
     // get the voxel data
     std::vector<double> cube_data;
@@ -144,14 +138,12 @@ void CUBEfile::readFile(std::string file_path) {
         while (linestream >> value) { cube_data.push_back(value); }
     }
     // now extract into a 3-dimensional array of size N_steps[0]*N_steps[1]*N_steps[2] must include the amount of DSET_IDS and N_vals afterwards
-    double CUBE_array[N_steps[0]][N_steps[1]][N_steps[2]];
     for (auto i = 0; i < N_steps[0]; i++) { // i goes from 0 to N_X
         std::vector<std::vector<double>> j_vec;
         for (auto j = 0; j < N_steps[1]; j++) { // j goes from 0 to N_Y
             std::vector<double> k_vec;
             for (auto k = 0; k < N_steps[2]; k++) { // k goes from 0 to N_Z
                 k_vec.push_back(cube_data[i + j + k]);
-                CUBE_array[i][j][k] = cube_data[i + j + k]; // this should place the correct value into the correct place in the array
             }
             j_vec.push_back(k_vec);
         }
