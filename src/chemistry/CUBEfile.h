@@ -25,7 +25,6 @@
 
 #pragma once
 #include <MRCPP/MWFunctions>
-#include <string>
 
 namespace mrchem {
 
@@ -36,6 +35,18 @@ public:
 
 protected:
     void readFile(std::string file_path);
-    std::vector<std::vector<std::vector<double>>> CUBE;
+
+    std::string comments;
+    std::vector<double> corner;
+    int N_atoms;
+    int N_val = 1;
+    int N_steps[3];          // size 3 array of the number of steps in each voxel axis. 0 is the X_axis, 1 is the Y_axis and 2 is the Z_axis
+    double voxel_axes[3][3]; // size 3x3 array of the voxel axes, first index denotes which voxel, second denotes stepsize on each cartesian coordinate
+    std::vector<int> atom_numbers;
+    std::vector<double> atom_charges;
+    std::vector<std::vector<double>> atom_coords;
+    std::vector<int> DSET_IDS; // vector containing important information about data stored in each voxel point.
+    std::vector<std::vector<std::vector<std::vector<double>>>>
+        CUBE; // indexing here works as [x_step][y_step][z_step][value_number-1]. If there is only one value per voxel, the vector will still be 4 dimensional.
 };
 } // namespace mrchem

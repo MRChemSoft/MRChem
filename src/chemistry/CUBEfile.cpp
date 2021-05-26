@@ -24,6 +24,7 @@
  */
 
 #include "CUBEfile.h"
+#include <Eigen/Core>
 #include <cmath>
 #include <fstream>
 #include <iostream>
@@ -37,7 +38,21 @@ CUBEfile::CUBEfile(std::string file_path) {
 }
 
 // Do a quadrature of the file
-double CUBEfile::evalf(const mrcpp::Coord<3> &r) const {}
+double CUBEfile::evalf(const mrcpp::Coord<3> &r) const {
+    // normalize the basis as X_j/(X_j\cdot X_j) = NX_j
+    Eigen::Matrix3d normalized_basis;
+
+    for (int i = 0; i < 3; i++) {
+        Eigen::Vector3d basis_vector(voxel_axes[i]);
+        std::cout << basis_vector << "\n";
+        auto normalized_basis_vector = basis_vector.normalized();
+        normalized_basis.row(i) = normalized_basis_vector; // should set the new normalized matrix with normalized vectors.
+        std::cout << "norm of vector:  " << basis_vector.norm() << "\n norm of normalized vector:  " << normalized_basis_vector.norm() << "\n";
+        std::cout << "iter:  " << i << "\n";
+    }
+    std::cout << normalized_basis;
+    // perform NX_j \cdot r
+}
 
 // first draft on reading a cubefile
 // for the second try I might want to go for a single while loop to extract everything into the respective variables with an index i and if else blocks
@@ -61,14 +76,12 @@ void CUBEfile::readFile(std::string file_path) {
     // get out important info from vector
 
     // get comments
-    std::string comments = raw_cube_vector[0] + "\n" + raw_cube_vector[1];
+    comments = raw_cube_vector[0] + "\n" + raw_cube_vector[1];
 
     // get corner of cubeplot
-    std::vector<double> corner;
-    int N_atoms;
-    int N_val = 1; // NUmber of values per voxel.
     double value;
-    std::stringstream origin(raw_cube_vector[2]);
+
+    std::stringstream origin(raw_cube_vector[2]); // might either use the same stringstream for all parameters or do it all at the start loop
     int i = 0;
     while (origin >> value) {
         i++;
@@ -84,8 +97,6 @@ void CUBEfile::readFile(std::string file_path) {
     }
 
     // get all voxel axis values all of this might be better to do while reading the file
-    int N_steps[3];          // size 3 array of the number of steps in each voxel axis. 0 is the X_axis, 1 is the Y_axis and 2 is the Z_axis
-    double voxel_axes[3][3]; // size 3x3 array of the voxel axes, first index denotes which voxel, second denotes stepsize on each cartesian coordinate
 
     for (int j = 0; j != 3; j++) {
         std::stringstream datastream(raw_cube_vector[3 + j]);
@@ -101,33 +112,37 @@ void CUBEfile::readFile(std::string file_path) {
     }
 
     // get all atom coordinates
-    int atom_numbers[std::abs(N_atoms)];
-    double atom_charges[std::abs(N_atoms)];
-    double atom_coords[std::abs(N_atoms)][3]; // 3D coordinates of each atom
     for (int j = 0; j < std::abs(N_atoms); j++) {
         std::stringstream datastream(raw_cube_vector[6 + j]);
         i = 0;
+        std::vector<double> i_vec;
         while (datastream >> value) {
             if (i == 0) {
-                atom_numbers[j] = value;
+                atom_numbers.push_back(value);
             } else if (i == 1) {
-                atom_charges[j] = value;
+                atom_charges.push_back(value);
             } else {
-                atom_coords[j][i - 2] = value;
+                i_vec.push_back(value);
             }
             i++;
         }
+        atom_coords.push_back(i_vec);
     }
 
-    // get the DSET_IDS if there are any
-    std::vector<int> DSET_IDS; // vector containing important information about data stored in each voxel point.
+    // get the DSET_IDS if there are any.
+    // TODO take into account the case where too many values are included that take more than just one line.
     if (N_atoms < 0) {
         std::stringstream DSET_IDS_stream(raw_cube_vector[6 + std::abs(N_atoms)]);
         i = 0;
         while (DSET_IDS_stream >> value) { DSET_IDS.push_back(int(value)); }
     } else {
         DSET_IDS.push_back(1);
+        DSET_IDS.push_back(1);
     }
+
+    // set number of vals dependent on DSET_IDS
+
+    if (N_atoms < 0) { N_val = DSET_IDS[0]; }
 
     // get the voxel data
     std::vector<double> cube_data;
@@ -137,13 +152,18 @@ void CUBEfile::readFile(std::string file_path) {
         std::stringstream linestream(*iter);
         while (linestream >> value) { cube_data.push_back(value); }
     }
-    // now extract into a 3-dimensional array of size N_steps[0]*N_steps[1]*N_steps[2] must include the amount of DSET_IDS and N_vals afterwards
+
+    // now extract into a 4-dimensional vector of size N_steps[0]*N_steps[1]*N_steps[2]*N_val must include the amount of DSET_IDS and N_vals afterwards
     for (auto i = 0; i < N_steps[0]; i++) { // i goes from 0 to N_X
-        std::vector<std::vector<double>> j_vec;
+        std::vector<std::vector<std::vector<double>>> j_vec;
         for (auto j = 0; j < N_steps[1]; j++) { // j goes from 0 to N_Y
-            std::vector<double> k_vec;
+            std::vector<std::vector<double>> k_vec;
             for (auto k = 0; k < N_steps[2]; k++) { // k goes from 0 to N_Z
-                k_vec.push_back(cube_data[i + j + k]);
+                std::vector<double> l_vec;
+                for (auto l = 0; l < N_val; l++) { //  l goes from 0 to N_val
+                    l_vec.push_back(cube_data[i + j + k + l]);
+                }
+                k_vec.push_back(l_vec);
             }
             j_vec.push_back(k_vec);
         }

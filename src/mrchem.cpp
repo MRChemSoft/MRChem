@@ -62,6 +62,8 @@ int main(int argc, char **argv) {
     std::string file_path = "HOMO.cube";
 
     CUBEfile testCube(file_path);
+    mrcpp::Coord<3> r = {0.0, 0.0, 0.0};
+    testCube.evalf(r);
     // finished test
 
     Molecule mol;
