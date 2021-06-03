@@ -58,13 +58,6 @@ int main(int argc, char **argv) {
     const auto &rsp_inp = json_inp["rsp_calculations"];
 
     Timer timer;
-    // testing stuff
-    std::string file_path = "HOMO.cube";
-
-    CUBEfile testCube(file_path);
-    mrcpp::Coord<3> r = {0.0, 0.0, 0.0};
-    testCube.evalf(r);
-    // finished test
 
     Molecule mol;
     driver::init_molecule(mol_inp, mol);

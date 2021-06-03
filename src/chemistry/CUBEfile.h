@@ -35,7 +35,7 @@ public:
 
 protected:
     void readFile(std::string file_path);
-
+    void normalize_basis();
     std::string comments;
     Eigen::Vector3d corner;
     int N_atoms;
@@ -47,5 +47,6 @@ protected:
     std::vector<std::vector<double>> atom_coords;
     std::vector<int> DSET_IDS;             // vector containing important information about data stored in each voxel point.
     std::vector<std::vector<double>> CUBE; // indexing here works as  [value_number-1][x_step + y_step + z_step].
+    Eigen::Matrix3d normalized_basis; //"normalized"", just multiply each row by its 1/norm^2
 };
 } // namespace mrchem
