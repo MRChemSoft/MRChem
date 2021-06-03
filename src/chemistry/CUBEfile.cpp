@@ -62,7 +62,8 @@ double CUBEfile::evalf(const mrcpp::Coord<3> &r) const {
         d_index(i) = coeff(i) - index(i); // deviation from the nearest voxel point thats lower that the point r, it always in the interval [0,1)
     }
 
-    // do the trilinear interpolation naivelly without loops or any logic (just plug in the equations)
+    // do the trilinear interpolation naively without loops or any logic (just plug in the equations)
+    // TODO use the linear system form
 
     auto c000 = CUBE[0][(index(0)) * N_steps[1] * N_steps[2] + (index(1)) * N_steps[2] + (index(2))];
     auto c001 = CUBE[0][(index(0)) * N_steps[1] * N_steps[2] + (index(1)) * N_steps[2] + (1 + index(2))];

@@ -34,7 +34,6 @@
 #include "parallel.h"
 #include "version.h"
 
-#include "chemistry/CUBEfile.h"
 #include "chemistry/Molecule.h"
 
 // Initializing global variables
@@ -58,7 +57,6 @@ int main(int argc, char **argv) {
     const auto &rsp_inp = json_inp["rsp_calculations"];
 
     Timer timer;
-
     Molecule mol;
     driver::init_molecule(mol_inp, mol);
     auto scf_out = driver::scf::run(scf_inp, mol);
