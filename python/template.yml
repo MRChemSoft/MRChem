@@ -462,6 +462,11 @@ sections:
         default: "initial_guess/Y_b"
         docstring: |
           File name for beta response orbitals, used with ``mw`` guess.
+      - name: CUBEfiles
+        type: List[str]
+        default: []
+        docstring: |
+          List of paths for the CUBEfiles. can be only one or many.
   - name: SCF
     docstring: |
       Includes parameters related to the ground state SCF orbital optimization.
