@@ -28,13 +28,12 @@
 
 namespace mrchem {
 
-class CUBEfile final : public mrcpp::RepresentableFunction<3> {
+class CUBEfunction final : public mrcpp::RepresentableFunction<3> {
 public:
-    CUBEfile(std::string file_path);
+    CUBEfunction();
     double evalf(const mrcpp::Coord<3> &r) const override;
 
 protected:
-    void readFile(std::string file_path);
     void normalize_basis();
     std::string comments;
     Eigen::Vector3d corner;
