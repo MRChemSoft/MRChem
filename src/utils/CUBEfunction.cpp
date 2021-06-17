@@ -34,7 +34,24 @@
 
 namespace mrchem {
 
-CUBEfunction::CUBEfunction() {
+CUBEfunction::CUBEfunction(const int N_atoms,
+                           const int N_vals,
+                           const std::array<int, 3> N_steps,
+                           const mrcpp::Coord<3> origin,
+                           const std::array<mrcpp::Coord<3>, 3> Voxel_axes,
+                           std::vector<int> Z_n,
+                           std::vector<double> cube,
+                           std::vector<double> atom_charges,
+                           std::vector<mrcpp::Coord<3>> atom_coords)
+        : N_atoms(N_atoms)
+        , N_val(N_vals)
+        , N_steps(N_steps)
+        , corner(origin)
+        , voxel_axes(Voxel_axes)
+        , atom_numbers(Z_n)
+        , CUBE(cube)
+        , atom_charges(atom_charges)
+        , atom_coords(atom_coords) {
     normalize_basis();
 }
 
@@ -53,7 +70,8 @@ double CUBEfunction::evalf(const mrcpp::Coord<3> &r) const {
 
     // perform NX_j \cdot r to find the indices i, j and k of the cubefile.
     Eigen::Map<const Eigen::Vector3d> r_vec(&r[0]);
-    Eigen::Vector3d coeff = normalized_basis * (r_vec - corner); // coefficients i, j and k in r = i*X + j*Y + k*Z
+    Eigen::Map<const Eigen::Vector3d> origin(&corner[0]);
+    Eigen::Vector3d coeff = normalized_basis * (r_vec - origin); // coefficients i, j and k in r = i*X + j*Y + k*Z
     Eigen::Vector3d d_index;
     Eigen::Vector3i index;
     for (auto i = 0; i < 3; i++) {
@@ -64,14 +82,14 @@ double CUBEfunction::evalf(const mrcpp::Coord<3> &r) const {
     // do the trilinear interpolation naively without loops or any logic (just plug in the equations)
     // TODO use the linear system form
 
-    auto c000 = CUBE[0][(index(0)) * N_steps[1] * N_steps[2] + (index(1)) * N_steps[2] + (index(2))];
-    auto c001 = CUBE[0][(index(0)) * N_steps[1] * N_steps[2] + (index(1)) * N_steps[2] + (1 + index(2))];
-    auto c010 = CUBE[0][(index(0)) * N_steps[1] * N_steps[2] + (1 + index(1)) * N_steps[2] + (index(2))];
-    auto c011 = CUBE[0][(index(0)) * N_steps[1] * N_steps[2] + (1 + index(1)) * N_steps[2] + (1 + index(2))];
-    auto c100 = CUBE[0][(1 + index(0)) * N_steps[1] * N_steps[2] + (index(1)) * N_steps[2] + (index(2))];
-    auto c101 = CUBE[0][(1 + index(0)) * N_steps[1] * N_steps[2] + (index(1)) * N_steps[2] + (1 + index(2))];
-    auto c110 = CUBE[0][(1 + index(0)) * N_steps[1] * N_steps[2] + (1 + index(1)) * N_steps[2] + (index(2))];
-    auto c111 = CUBE[0][(1 + index(0)) * N_steps[1] * N_steps[2] + (1 + index(1)) * N_steps[2] + (1 + index(2))];
+    auto c000 = CUBE[(index(0)) * N_steps[1] * N_steps[2] + (index(1)) * N_steps[2] + (index(2))];
+    auto c001 = CUBE[(index(0)) * N_steps[1] * N_steps[2] + (index(1)) * N_steps[2] + (1 + index(2))];
+    auto c010 = CUBE[(index(0)) * N_steps[1] * N_steps[2] + (1 + index(1)) * N_steps[2] + (index(2))];
+    auto c011 = CUBE[(index(0)) * N_steps[1] * N_steps[2] + (1 + index(1)) * N_steps[2] + (1 + index(2))];
+    auto c100 = CUBE[(1 + index(0)) * N_steps[1] * N_steps[2] + (index(1)) * N_steps[2] + (index(2))];
+    auto c101 = CUBE[(1 + index(0)) * N_steps[1] * N_steps[2] + (index(1)) * N_steps[2] + (1 + index(2))];
+    auto c110 = CUBE[(1 + index(0)) * N_steps[1] * N_steps[2] + (1 + index(1)) * N_steps[2] + (index(2))];
+    auto c111 = CUBE[(1 + index(0)) * N_steps[1] * N_steps[2] + (1 + index(1)) * N_steps[2] + (1 + index(2))];
 
     auto c00 = c000 * (1 - d_index(0)) + c100 * d_index(0);
     auto c01 = c001 * (1 - d_index(0)) + c101 * d_index(0);
@@ -89,9 +107,11 @@ double CUBEfunction::evalf(const mrcpp::Coord<3> &r) const {
 }
 
 void CUBEfunction::normalize_basis() {
+    // This should work for a std::array<std::array<double,3>,3> where each axis is a row.
+    Eigen::Map<const Eigen::Matrix<double, 3, 3, Eigen::RowMajor>> basis(&voxel_axes[0][0]);
     // normalize the basis as X_j/(X_j\cdot X_j) = NX_j
     for (int i = 0; i < 3; i++) {
-        normalized_basis.row(i) = voxel_axes.row(i) / voxel_axes.row(i).squaredNorm(); // should set the new normalized matrix with normalized vectors.
+        normalized_basis.row(i) = basis.row(i) / basis.row(i).squaredNorm(); // should set the new normalized matrix with normalized vectors.
     }
 }
 

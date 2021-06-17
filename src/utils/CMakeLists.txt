@@ -5,7 +5,7 @@ target_sources(mrchem
     ${CMAKE_CURRENT_SOURCE_DIR}/NonlinearMaximizer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/RRMaximizer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Bank.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/CUBEfile.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/CUBEfunction.cpp
   )
 
 add_subdirectory(gto_utils)

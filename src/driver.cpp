@@ -38,6 +38,7 @@
 #include "initial_guess/mw.h"
 #include "initial_guess/sad.h"
 
+#include "utils/CUBEfunction.h"
 #include "utils/MolPlotter.h"
 #include "utils/math_utils.h"
 #include "utils/print_utils.h"
@@ -1107,6 +1108,30 @@ json driver::print_properties(const Molecule &mol) {
     mol.printEnergies("final");
     mol.printProperties();
     return mol.json();
+}
+
+std::vector<mrchem::CUBEfunction> driver::getCUBEFunction(const json &json_inp) {
+    auto CUBE_data = json_inp["CUBE_data"];
+    std::vector<mrchem::CUBEfunction> CUBEVector;
+    if (CUBE_data.size() == 0) { return CUBEVector; }
+    for (const auto &item : CUBE_data.items()) {
+        auto Header = item.value()["Header"];
+        auto N_atoms = Header["N_atoms"].get<int>();
+        auto origin = Header["origin"].get<mrcpp::Coord<3>>();
+        auto N_steps = Header["N_steps"].get<std::array<int, 3>>();
+        auto Voxel_axes = Header["Voxel_axes"].get<std::array<mrcpp::Coord<3>, 3>>();
+        auto Z_n = Header["Z_n"].get<std::vector<int>>();
+        auto atom_charges = Header["atom_charges"].get<std::vector<double>>();
+        auto atom_coords = Header["atom_coords"].get<std::vector<mrcpp::Coord<3>>>();
+        auto N_vals = Header["N_vals"].get<int>();
+        for (const auto &value : item.value()["CUBE_data"].items()) {
+            auto CUBE_data = value.value().get<std::vector<double>>();
+            mrchem::CUBEfunction single_cube(N_atoms, N_vals, N_steps, origin, Voxel_axes, Z_n, CUBE_data, atom_charges, atom_coords);
+            CUBEVector.push_back(single_cube);
+        }
+    }
+
+    return CUBEVector;
 }
 
 } // namespace mrchem

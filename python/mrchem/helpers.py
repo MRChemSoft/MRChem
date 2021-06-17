@@ -387,12 +387,12 @@ def parse_wf_method(user_dict):
 
 
 def write_cube_dict(user_dict):
-    cube_list = user_dict["Files"]["CUBEfiles"]
-    cube_dict = {}
-    if (len(cube_list) != 0):
-        for cube_path in cube_list:
-            cube_dict.update(parse_cube_file(cube_path))
-    return cube_dict
+    cube_path_list = user_dict["Files"]["CUBEfiles"]
+    cube_list= []
+    if (len(cube_path_list) != 0):
+        for cube_path in cube_path_list:
+            cube_list.append(parse_cube_file(cube_path))
+    return cube_list
 
 
 def parse_cube_file(cube_path):
@@ -440,7 +440,7 @@ def parse_cube_file(cube_path):
 
     # Set the amount of values depending on if the DSET_IDs were present or not
     if (N_atoms < 0):
-    # fetch all DSET_IDs, of these, only the first value is necessary, as it tells me the amount of values per voxel point
+    # fetch all DSET_IDs, of these, only the first value is necessary, as it tells me the amount of values per voxel point. the other values might be important in the future, so I am fetching everything.
         DSETIDs = []
         for line in header_list[6+abs(N_atoms):]:
             DSETIDs.extend(list(map(int, line.split()[:])))
@@ -451,10 +451,10 @@ def parse_cube_file(cube_path):
         N_vals = int(origin_line[-1])
 
     # construct the CUBE vector. Indexing is CUBE_vector[MO_ID][i*N_vals[1]*N_vals[2] + j*N_vals[2] + k] where i, j and k correspond to steps in the X, Y and Z voxel axes directions respectively.
-    CUBE_vector = [ [cube_list[i + j + k + ID] for i in range(N_steps[0]) for j in range(N_steps[1]) for k in range(N_steps[2])]  for ID in range(N_vals)]
+    CUBE_vector = [ [cube_list[i*N_steps[1]*N_steps[2]*N_vals + j*N_steps[2]*N_vals + k*N_vals + ID] for i in range(N_steps[0]) for j in range(N_steps[1]) for k in range(N_steps[2])]  for ID in range(N_vals)]
 
-    cube_dict = {
-        cube_path: {
+    cube_dict= {
+            "CUBE_file": cube_path,
             "Header": {
                 "comments": comments[0]+comments[1],
                 "N_atoms": abs(N_atoms),
@@ -466,8 +466,6 @@ def parse_cube_file(cube_path):
                 "atom_coords": atom_coords,
                 "N_vals": N_vals
             },
-
             "CUBE_data": CUBE_vector
-        }
     }
     return cube_dict
