@@ -26,6 +26,7 @@
 import math
 
 from .helpers import *
+from .CUBEparser import *
 from .periodictable import PeriodicTable as PT, PeriodicTableByZ as PT_Z
 
 
@@ -53,7 +54,7 @@ def translate_input(user_dict):
         "molecule": mol_dict,
         "scf_calculation": scf_dict,
         "rsp_calculations": rsp_dict,
-        "CUBE_data": cube_list,
+        "CUBE_paths": cube_list,
     }
     return program_dict
 

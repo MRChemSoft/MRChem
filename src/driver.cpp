@@ -1110,10 +1110,9 @@ json driver::print_properties(const Molecule &mol) {
     return mol.json();
 }
 
-std::vector<mrchem::CUBEfunction> driver::getCUBEFunction(const json &json_inp) {
-    auto CUBE_data = json_inp["CUBE_data"];
+std::vector<mrchem::CUBEfunction> driver::getCUBEFunction(const json &json_cube) {
+    auto CUBE_data = json_cube;
     std::vector<mrchem::CUBEfunction> CUBEVector;
-    if (CUBE_data.size() == 0) { return CUBEVector; }
     for (const auto &item : CUBE_data.items()) {
         auto Header = item.value()["Header"];
         auto N_atoms = Header["N_atoms"].get<int>();
@@ -1125,7 +1124,7 @@ std::vector<mrchem::CUBEfunction> driver::getCUBEFunction(const json &json_inp) 
         auto atom_coords = Header["atom_coords"].get<std::vector<mrcpp::Coord<3>>>();
         auto N_vals = Header["N_vals"].get<int>();
         for (const auto &value : item.value()["CUBE_data"].items()) {
-            auto CUBE_data = value.value().get<std::vector<double>>();
+            auto CUBE_data = value.value().get<std::vector<double>>(); // the data is saved as a vector of vectors indexing as CUBE_data[ID][x_val*n_steps[1]*n_steps[2] + y_val*n_steps[2] + z_val]
             mrchem::CUBEfunction single_cube(N_atoms, N_vals, N_steps, origin, Voxel_axes, Z_n, CUBE_data, atom_charges, atom_coords);
             CUBEVector.push_back(single_cube);
         }
