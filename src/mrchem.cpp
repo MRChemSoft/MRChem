@@ -56,10 +56,10 @@ int main(int argc, char **argv) {
 
     // read CUBE_vector.json if it exists
     std::vector<mrchem::CUBEfunction> CUBEVector;
-    if (json_inp["CUBE_paths"].size() != 0) {
+    if (json_inp["scf_calculation"]["initial_guess"]["type"] == "CUBE") {
 
         json cube_inp;
-        std::ifstream ifs("CUBE_vector.json", std::ios_base::in);
+        std::ifstream ifs("CUBE_p_vector.json", std::ios_base::in);
         ifs >> cube_inp;
         ifs.close();
 

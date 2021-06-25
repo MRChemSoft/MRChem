@@ -81,25 +81,29 @@ double CUBEfunction::evalf(const mrcpp::Coord<3> &r) const {
 
     // do the trilinear interpolation naively without loops or any logic (just plug in the equations)
     // TODO use the linear system form
+    double c;
+    if ((coeff(0) > N_steps[0]) or (coeff(1) > N_steps[1]) or (coeff(2) > N_steps[2]) or (coeff(0) < 0) or (coeff(1) < 0) or (coeff(2) < 0)) {
+        c = 0.0; // this should prohibit the projector from giving out trash when evaluating outside the cube.
+    } else {
+        auto c000 = CUBE[(index(0)) * N_steps[1] * N_steps[2] + (index(1)) * N_steps[2] + (index(2))];
+        auto c001 = CUBE[(index(0)) * N_steps[1] * N_steps[2] + (index(1)) * N_steps[2] + (1 + index(2))];
+        auto c010 = CUBE[(index(0)) * N_steps[1] * N_steps[2] + (1 + index(1)) * N_steps[2] + (index(2))];
+        auto c011 = CUBE[(index(0)) * N_steps[1] * N_steps[2] + (1 + index(1)) * N_steps[2] + (1 + index(2))];
+        auto c100 = CUBE[(1 + index(0)) * N_steps[1] * N_steps[2] + (index(1)) * N_steps[2] + (index(2))];
+        auto c101 = CUBE[(1 + index(0)) * N_steps[1] * N_steps[2] + (index(1)) * N_steps[2] + (1 + index(2))];
+        auto c110 = CUBE[(1 + index(0)) * N_steps[1] * N_steps[2] + (1 + index(1)) * N_steps[2] + (index(2))];
+        auto c111 = CUBE[(1 + index(0)) * N_steps[1] * N_steps[2] + (1 + index(1)) * N_steps[2] + (1 + index(2))];
 
-    auto c000 = CUBE[(index(0)) * N_steps[1] * N_steps[2] + (index(1)) * N_steps[2] + (index(2))];
-    auto c001 = CUBE[(index(0)) * N_steps[1] * N_steps[2] + (index(1)) * N_steps[2] + (1 + index(2))];
-    auto c010 = CUBE[(index(0)) * N_steps[1] * N_steps[2] + (1 + index(1)) * N_steps[2] + (index(2))];
-    auto c011 = CUBE[(index(0)) * N_steps[1] * N_steps[2] + (1 + index(1)) * N_steps[2] + (1 + index(2))];
-    auto c100 = CUBE[(1 + index(0)) * N_steps[1] * N_steps[2] + (index(1)) * N_steps[2] + (index(2))];
-    auto c101 = CUBE[(1 + index(0)) * N_steps[1] * N_steps[2] + (index(1)) * N_steps[2] + (1 + index(2))];
-    auto c110 = CUBE[(1 + index(0)) * N_steps[1] * N_steps[2] + (1 + index(1)) * N_steps[2] + (index(2))];
-    auto c111 = CUBE[(1 + index(0)) * N_steps[1] * N_steps[2] + (1 + index(1)) * N_steps[2] + (1 + index(2))];
+        auto c00 = c000 * (1 - d_index(0)) + c100 * d_index(0);
+        auto c01 = c001 * (1 - d_index(0)) + c101 * d_index(0);
+        auto c10 = c010 * (1 - d_index(0)) + c110 * d_index(0);
+        auto c11 = c011 * (1 - d_index(0)) + c111 * d_index(0);
 
-    auto c00 = c000 * (1 - d_index(0)) + c100 * d_index(0);
-    auto c01 = c001 * (1 - d_index(0)) + c101 * d_index(0);
-    auto c10 = c010 * (1 - d_index(0)) + c110 * d_index(0);
-    auto c11 = c011 * (1 - d_index(0)) + c111 * d_index(0);
+        auto c0 = c00 * (1 - d_index(1)) + c10 * d_index(1);
+        auto c1 = c01 * (1 - d_index(1)) + c11 * d_index(1);
 
-    auto c0 = c00 * (1 - d_index(1)) + c10 * d_index(1);
-    auto c1 = c01 * (1 - d_index(1)) + c11 * d_index(1);
-
-    double c = c0 * (1 - d_index(2)) + c1 * d_index(2);
+        c = c0 * (1 - d_index(2)) + c1 * d_index(2);
+    }
 
     // Alternativelly i can solve this as a linear system
 

@@ -27,15 +27,17 @@
 import re
 from json import dump
 
-def write_cube_dict(user_dict):
-    cube_path_list = user_dict["Files"]["CUBEfiles"]
-    cube_list= []
+def write_cube_dict(file_dict):
+    cube_path_list = file_dict["CUBEfiles"]
+    CUBE_guess = False
     if (len(cube_path_list) != 0):
+        CUBE_guess = True
+        cube_list= []
         for cube_path in cube_path_list:
             cube_list.append(parse_cube_file(cube_path))
-    with open("CUBE_vector.json", "w") as fd:
-        dump(cube_list, fd, indent=2)
-    return cube_path_list
+        with open("CUBE_p_vector.json", "w") as fd:
+            dump(cube_list, fd, indent=2)
+    return CUBE_guess
 
 
 def parse_cube_file(cube_path):
