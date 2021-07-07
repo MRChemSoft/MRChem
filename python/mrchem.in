@@ -28,7 +28,7 @@
 
 import subprocess
 import sys
-from json import dumps
+from json import dumps, dump
 from pathlib import Path
 
 this_path = Path(__file__).parent

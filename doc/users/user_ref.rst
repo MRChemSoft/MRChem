@@ -494,6 +494,12 @@ User input reference
   
     **Default** ``initial_guess/Y_b``
   
+   :CUBEfiles: List of paths for the CUBEfiles. can be only one or many. 
+  
+    **Type** ``List[str]``
+  
+    **Default** ``[]``
+  
  :SCF: Includes parameters related to the ground state SCF orbital optimization. 
 
   :red:`Keywords`

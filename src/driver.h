@@ -28,11 +28,12 @@
 namespace mrchem {
 
 class Molecule;
-
+class CUBEfunction;
 namespace driver {
 
 void init_molecule(const nlohmann::json &input, Molecule &mol);
 nlohmann::json print_properties(const Molecule &mol);
+std::vector<mrchem::CUBEfunction> getCUBEFunction(const nlohmann::json &json_inp);
 
 namespace scf {
 nlohmann::json run(const nlohmann::json &input, Molecule &mol);

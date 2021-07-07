@@ -38,6 +38,7 @@
 #include "initial_guess/mw.h"
 #include "initial_guess/sad.h"
 
+#include "utils/CUBEfunction.h"
 #include "utils/MolPlotter.h"
 #include "utils/math_utils.h"
 #include "utils/print_utils.h"
@@ -788,8 +789,9 @@ bool driver::rsp::guess_orbitals(const json &json_guess, Molecule &mol) {
     auto mw_yb = json_guess["file_y_b"];
     auto file_chk_x = json_guess["file_chk_x"];
     auto file_chk_y = json_guess["file_chk_y"];
+    auto file_cube_p = json_guess["file_CUBE_p"]
 
-    auto &Phi = mol.getOrbitals();
+        auto &Phi = mol.getOrbitals();
     auto &X = mol.getOrbitalsX();
     auto &Y = mol.getOrbitalsY();
 
@@ -799,6 +801,8 @@ bool driver::rsp::guess_orbitals(const json &json_guess, Molecule &mol) {
         success_x = initial_guess::chk::setup(X, file_chk_x);
     } else if (type == "mw") {
         success_x = initial_guess::mw::setup(X, prec, mw_xp, mw_xa, mw_xb);
+    } else if (type == "CUBE") {
+        success_x = initial_guess::CUBE::setup(X, prec, mw_xp, mw_xa, mw_xb);
     } else if (type == "none") {
         mrcpp::print::separator(0, '~');
         print_utils::text(0, "Calculation     ", "Compute initial orbitals");
@@ -1107,6 +1111,28 @@ json driver::print_properties(const Molecule &mol) {
     mol.printEnergies("final");
     mol.printProperties();
     return mol.json();
+}
+
+std::vector<mrchem::CUBEfunction> driver::getCUBEFunction(const json &json_cube) {
+    std::vector<mrchem::CUBEfunction> CUBEVector;
+    for (const auto &item : json_cube.items()) {
+        auto Header = item.value()["Header"];
+        auto N_atoms = Header["N_atoms"];
+        auto origin = Header["origin"];
+        auto N_steps = Header["N_steps"];
+        auto Voxel_axes = Header["Voxel_axes"];
+        auto Z_n = Header["Z_n"];
+        auto atom_charges = Header["atom_charges"];
+        auto atom_coords = Header["atom_coords"];
+        auto N_vals = Header["N_vals"];
+        for (const auto &value : item.value()["CUBE_data"].items()) {
+            auto CUBE_data = value.value(); // the data is saved as a vector of vectors indexing as CUBE_data[ID][x_val*n_steps[1]*n_steps[2] + y_val*n_steps[2] + z_val]
+            mrchem::CUBEfunction single_cube(N_atoms, N_vals, N_steps, origin, Voxel_axes, Z_n, CUBE_data, atom_charges, atom_coords);
+            CUBEVector.push_back(single_cube);
+        }
+    }
+
+    return CUBEVector;
 }
 
 } // namespace mrchem
